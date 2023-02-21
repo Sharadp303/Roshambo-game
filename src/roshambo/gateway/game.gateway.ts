@@ -8,15 +8,15 @@ import { User } from "src/auth/Schema/user.schema";
 import { Player } from "../playersSchema/players.schema";
 
 enum moves{
-    rock="RocK",
-    paper="Paper",
-    scissor="Scissor"
+    rock="rock",
+    paper="paper",
+    scissor="scissor"
  }
 
  enum winStatus{
-    win="Win",
-    lose="Lose",
-    tie="Tie"
+    win="win",
+    lose="lose",
+    tie="tie"
  }
 
 @Injectable()
@@ -113,9 +113,12 @@ async  handleConnection(client: any) {
           this.countmove++;
         //   const room = this.server.sockets.adapter.rooms.get(rooms[1]).size;
         //   console.log(room)
+
+        /// Stoppong Condition
+            
+        
           
-          
-          if(this.countmove==2){
+          if((this.countmove%2)==0){
             console.log("chlo game khelte hai")
            const whoIsINRoom = this.server.sockets.adapter.rooms.get(rooms[1])
            const findUser =Array.from(whoIsINRoom)
@@ -126,95 +129,114 @@ async  handleConnection(client: any) {
            console.log(player2)
                  
            if(player1.move[player1.move.length-1]==player2.move[player2.move.length-1]){
-            this.server.emit('message',`Its a tie!!!!`)
             player1.playingHistory.push(winStatus.tie)
            await player1.save()
             player2.playingHistory.push(winStatus.tie)
            await player2.save()
+           this.server.emit('message',`Its a tie!!!!`)
+
            }
 
-           else if( player1.move[player1.move.length-1]==moves.rock && player2.move[player2.move.length-1]==moves.paper){
-            this.server.emit('message',`Winner is paper :${player2.id} `)
+           else if( (player1.move[player1.move.length-1] as moves)==moves.rock && (player2.move[player2.move.length-1] as moves)==moves.paper){
             player1.playingHistory.push(winStatus.lose)
            await player1.save()
             player2.playingHistory.push(winStatus.win)
            await player2.save()
+           this.server.emit('message',`Winner is paper :${player2.id} `)
+
            }
 
-           else if( player1.move[player1.move.length-1]==moves.paper && player2.move[player2.move.length-1]==moves.rock){
-            this.server.emit('message',`Winner is paper :${player1.id} `)
+           else if( (player1.move[player1.move.length-1] as moves)==moves.paper && (player2.move[player2.move.length-1] as moves)==moves.rock){
             player1.playingHistory.push(winStatus.win)
            await player1.save()
             player2.playingHistory.push(winStatus.lose)
            await player2.save()
+           this.server.emit('message',`Winner is paper :${player1.id} `)
+
            }
 
-           else if( player1.move[player1.move.length-1]==moves.rock && player2.move[player2.move.length-1]==moves.scissor){
-            this.server.emit('message',`Winner is Rock:${player1.id} `)
+           else if( (player1.move[player1.move.length-1] as moves)==moves.rock && (player2.move[player2.move.length-1] as moves)==moves.scissor){
             player1.playingHistory.push(winStatus.win)
            await player1.save()
             player2.playingHistory.push(winStatus.lose)
            await player2.save()
+           this.server.emit('message',`Winner is Rock:${player1.id} `)
+
            }
 
-           else if( player1.move[player1.move.length-1]==moves.scissor && player2.move[player2.move.length-1]==moves.rock){
+           else if( (player1.move[player1.move.length-1] as moves)==moves.scissor && (player2.move[player2.move.length-1] as moves)==moves.rock){
+            player1.playingHistory.push(winStatus.lose)
+            await player1.save()
+            player2.playingHistory.push(winStatus.win)
+            await player2.save()
             this.server.emit('message',`Winner is Rock:${player2.id} `)
-            player1.playingHistory.push(winStatus.lose)
-            await player1.save()
-            player2.playingHistory.push(winStatus.win)
-            await player2.save()
+
            }
 
-           else if( player1.move[player1.move.length-1]==moves.scissor && player2.move[player2.move.length-1]==moves.paper){
-            this.server.emit('message',`Winner is Scissor:${player1.id} `)
+           else if( (player1.move[player1.move.length-1] as moves)==moves.scissor && (player2.move[player2.move.length-1] as moves)==moves.paper){
             player1.playingHistory.push(winStatus.win)
             await player1.save()
             player2.playingHistory.push(winStatus.lose)
             await player2.save()
+            this.server.emit('message',`Winner is Scissor:${player1.id} `)
+
            }
 
-           else if( player1.move[player1.move.length-1]==moves.paper && player2.move[player2.move.length-1]==moves.scissor){
-            this.server.emit('message',`Winner is Scissor:${player2.id} `)
+           else if( (player1.move[player1.move.length-1] as moves)==moves.paper && (player2.move[player2.move.length-1] as moves)==moves.scissor){
             player1.playingHistory.push(winStatus.lose)
            await  player1.save()
             player2.playingHistory.push(winStatus.win)
            await player2.save()
+           this.server.emit('message',`Winner is Scissor:${player2.id} `)
+
            }
            
 
            else{
-            this.server.emit('message',`Enter the right Input`)
+            this.server.emit('message',`Enter the right Input or you should wait for another player`)
            }
 
 
-           }
+                            if(player1.playingHistory.length==3){
+                                let winningCount1=0;
+                                let winningCount2=0;
+                                console.log(player1.playingHistory)
+                                console.log(player2.playingHistory)
 
+                                player1.playingHistory.forEach((ele)=>{
+                                    if(ele==winStatus.win){
+                                        winningCount1++
+                                    }
+                                })
+
+                                player2.playingHistory.forEach((ele)=>{
+                                    if(ele==winStatus.win){
+                                        winningCount1++
+                                    }
+                                })
+
+                                console.log(winningCount1,winningCount2)
+                                if(winningCount1>winningCount2){
+                                    this.server.emit('message',`Overall result:Winner is client:${player1.id}`)
+                                    return
+                                }
+                                else if(winningCount1<winningCount2){
+                                    this.server.emit('message',`Overall result:Winner is client:${player2.id}`)
+                                    return
+                                }
+                                else{
+                                    this.server.emit('message',`Overall result:Tie`)
+                                    return
+                                }
+                                
+                            }
+
+           
+        }
       
           }     
 
-//         private findMaxRepeatedElement(arr):any{
-//             let freq = {}; 
-//             let maxFreq = 0; 
-//             let ans="" 
-        
-//             for (let i = 0; i < arr.length; i++) {
-//             let elem = arr[i];
-//             if (freq[elem]) {
-//                 freq[elem]++; 
-//             } else {
-//                 freq[elem] = 1; 
-//             }
-//             }
-            
-//             for(let value in freq){
-//             if(freq[value]>maxFreq){
-//                 maxFreq=freq[value]
-//                 ans=value
-//             }
-//                 }
-        
-//             return ans; 
-//         }
+
             
     }
 
