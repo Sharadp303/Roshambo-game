@@ -3,7 +3,8 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 enum moves{
    rock="RocK",
    paper="Paper",
-   scissor="Scissor"
+   scissor="Scissor",
+   late="late"
 }
 
 @Schema({timestamps:true})

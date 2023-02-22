@@ -10,7 +10,8 @@ import { Player } from "../playersSchema/players.schema";
 enum moves{
     rock="rock",
     paper="paper",
-    scissor="scissor"
+    scissor="scissor",
+    late="late"
  }
 
  enum winStatus{
@@ -93,51 +94,42 @@ async  handleConnection(client: any) {
     handleDisconnect(client: any) {
        console.log(`DisConnected User:${client.id}`)
     }
-
+ 
  private countmove=0;
     @SubscribeMessage('message')
     async letsplay(@ConnectedSocket() client:Socket ,@MessageBody() move:moves){
           console.log(client.id) 
           const player=await this.playerModel.findOne({id:client.id})
           //console.log(player)
-          await  player.move.push(move)
+         
           
          
-          let currentTimeAndDate=Date.now()
+           let currentTimeAndDate=Date.now()
            let curr:any=new Date(currentTimeAndDate)
           
-        let min=curr.getMinutes()-player.updatedAt.getMinutes();
+           let min=curr.getMinutes()-player.updatedAt.getMinutes();
 
-        let sec;
-if(curr.getSeconds()<player.updatedAt.getSeconds()){
-    let a=Number(curr.getSeconds()+60)
-    console.log(curr.getSeconds())
-    let b=Number(player.updatedAt.getSeconds())
-    console.log(player.updatedAt.getSeconds())
-
-    sec=a-b 
-    console.log(sec) 
-}
-else{
-    console.log(curr.getSeconds())
-    console.log(player.updatedAt.getSeconds())
-
-    sec=curr.getSeconds()-player.updatedAt.getSeconds() 
-    console.log(sec)
-}
+             let sec;
+                        if(curr.getSeconds()<player.updatedAt.getSeconds()){
+                            let a=Number(curr.getSeconds()+60)
+                            let b=Number(player.updatedAt.getSeconds())
+                            sec=a-b 
+                            console.log(sec) 
+                        }
+                        else{
+                            console.log(curr.getSeconds())
+                            console.log(player.updatedAt.getSeconds())
+                            sec=curr.getSeconds()-player.updatedAt.getSeconds() 
+                            console.log(sec)
+                        }
        
 
           if(sec>30 || min>1){
             this.server.to(client.id).emit('message',`You have taken more than 30 seconds`)
-        
-            
-            return;
+            await player.move.push(moves.late)
+          }else{
+            await player.move.push(move)
           }
-
-    
-   
-
-        
 
           await player.save()
           
@@ -156,6 +148,7 @@ else{
           if((this.countmove%2)==0){
             
             console.log("chlo game khelte hai")
+            
            const whoIsINRoom = this.server.sockets.adapter.rooms.get(rooms[1])
            const findUser =Array.from(whoIsINRoom)
            console.log(findUser)
@@ -163,7 +156,8 @@ else{
            //console.log(player1)
            const player2= await this.playerModel.findOne({id:findUser[1]})
            //console.log(player2)
-                 
+           
+           
            if(player1.move[player1.move.length-1]==player2.move[player2.move.length-1]){
             player1.playingHistory.push(winStatus.tie)
            await player1.save()
@@ -226,7 +220,32 @@ else{
            this.server.emit('message',`Winner is Scissor:${player2.id} `)
 
            }
-           
+           else if( (player1.move[player1.move.length-1] as moves)==moves.late &&
+                        ( ((player2.move[player2.move.length-1] as moves)==moves.scissor) || 
+                           ((player2.move[player2.move.length-1] as moves)==moves.rock) || 
+                           ((player2.move[player2.move.length-1] as moves)==moves.paper) 
+                           ) ){
+                                player1.playingHistory.push(winStatus.lose)
+                            await  player1.save()
+                                player2.playingHistory.push(winStatus.win)
+                            await player2.save()
+                            this.server.emit('message',`Winner is :${player2.id} `)
+
+                            }
+
+           else if( (player2.move[player1.move.length-1] as moves)==moves.late &&
+           ( ((player1.move[player2.move.length-1] as moves)==moves.scissor) || 
+              ((player1.move[player2.move.length-1] as moves)==moves.rock) || 
+              ((player1.move[player2.move.length-1] as moves)==moves.paper) 
+              ) ){
+                    player1.playingHistory.push(winStatus.win)
+                    await  player1.save()
+                    player2.playingHistory.push(winStatus.lose)
+                    await player2.save()
+                    this.server.emit('message',`Winner is :${player1.id} `)
+
+                    }
+                            
 
            else{
             this.server.emit('message',`Enter the right Input or you should wait for another player`)
