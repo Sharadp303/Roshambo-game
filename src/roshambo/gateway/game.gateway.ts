@@ -125,26 +125,25 @@ async  handleConnection(client: any) {
        
 
           if(sec>30 || min>1){
-            this.server.to(client.id).emit('message',`You have taken more than 30 seconds`)
             await player.move.push(moves.late)
+            await player.save()
+            this.server.to(client.id).emit('message',`You have taken more than 30 seconds`)
+
           }else{
             await player.move.push(move)
+          await player.save()
+          this.server.emit('message',move)
           }
 
-          await player.save()
-          
           const rooms = Array.from(client.rooms);
           console.log(rooms)
     
-          this.server.emit('message',move)
           this.countmove++;
         //   const room = this.server.sockets.adapter.rooms.get(rooms[1]).size;
         //   console.log(room)
 
         /// Stoppong Condition
             
-        
-          
           if((this.countmove%2)==0){
             
             console.log("chlo game khelte hai")
@@ -266,7 +265,7 @@ async  handleConnection(client: any) {
 
                                 player2.playingHistory.forEach((ele)=>{
                                     if(ele==winStatus.win){
-                                        winningCount1++
+                                        winningCount2++
                                     }
                                 })
 
@@ -287,7 +286,7 @@ async  handleConnection(client: any) {
                             }
 
            
-        }
+           }
       
           }     
 
