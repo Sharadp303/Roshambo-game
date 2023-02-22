@@ -14,7 +14,7 @@ async playingHistory(name:string){
     const user=await this.userModel.findOne({name:name})
     const alldata=user.history;
     const ans= await this.playerModel.find({_id:alldata})
-    console.log(ans)
+   // console.log(ans)
 
     const obj={}
     ans.forEach(ele=>{

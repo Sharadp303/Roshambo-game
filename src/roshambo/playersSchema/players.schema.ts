@@ -14,7 +14,13 @@ export class Player{
     @Prop()
        move:moves[];
     @Prop()
-       playingHistory:string[]        
+       playingHistory:string[] 
+      
+       @Prop({default: Date.now()})
+       createdAt: Date;
+   
+       @Prop({default: Date.now()})
+       updatedAt: Date;
 }
 
 export const PlayerSchema=SchemaFactory.createForClass(Player)

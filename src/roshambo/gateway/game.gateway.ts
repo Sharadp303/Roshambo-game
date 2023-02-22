@@ -72,11 +72,8 @@ async  handleConnection(client: any) {
                     console.log(room)
 
                     if(room && room.size==2){
+                        this.server.to(this.roomName).emit('message',`Lets start the Game`)
                    console.log('Real GAme |||||||||||||')
-
-                   
-
-
                     }
 
                     if (room && room.size > 2) {
@@ -104,6 +101,44 @@ async  handleConnection(client: any) {
           const player=await this.playerModel.findOne({id:client.id})
           //console.log(player)
           await  player.move.push(move)
+          
+         
+          let currentTimeAndDate=Date.now()
+           let curr:any=new Date(currentTimeAndDate)
+          
+        let min=curr.getMinutes()-player.updatedAt.getMinutes();
+
+        let sec;
+if(curr.getSeconds()<player.updatedAt.getSeconds()){
+    let a=Number(curr.getSeconds()+60)
+    console.log(curr.getSeconds())
+    let b=Number(player.updatedAt.getSeconds())
+    console.log(player.updatedAt.getSeconds())
+
+    sec=a-b 
+    console.log(sec) 
+}
+else{
+    console.log(curr.getSeconds())
+    console.log(player.updatedAt.getSeconds())
+
+    sec=curr.getSeconds()-player.updatedAt.getSeconds() 
+    console.log(sec)
+}
+       
+
+          if(sec>30 || min>1){
+            this.server.to(client.id).emit('message',`You have taken more than 30 seconds`)
+        
+            
+            return;
+          }
+
+    
+   
+
+        
+
           await player.save()
           
           const rooms = Array.from(client.rooms);
@@ -119,14 +154,15 @@ async  handleConnection(client: any) {
         
           
           if((this.countmove%2)==0){
+            
             console.log("chlo game khelte hai")
            const whoIsINRoom = this.server.sockets.adapter.rooms.get(rooms[1])
            const findUser =Array.from(whoIsINRoom)
            console.log(findUser)
            const player1=await this.playerModel.findOne({id:findUser[0]})
-           console.log(player1)
+           //console.log(player1)
            const player2= await this.playerModel.findOne({id:findUser[1]})
-           console.log(player2)
+           //console.log(player2)
                  
            if(player1.move[player1.move.length-1]==player2.move[player2.move.length-1]){
             player1.playingHistory.push(winStatus.tie)
